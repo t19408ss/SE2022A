@@ -18,8 +18,9 @@ int main() {
     c = c->next;
   }
   for (i = 0; i < 100; i++) {
-    printf("%d\n", p->data);
+    printf("%d ", p->data);
     p = p->next;
   }
+  printf("\n");
   exit(0);
 }
