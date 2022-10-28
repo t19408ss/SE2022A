@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"algorithm": "c",
+			"random": "c",
+			"vector": "cpp"
+		}
+	}
+}
