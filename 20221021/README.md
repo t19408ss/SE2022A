@@ -1,4 +1,4 @@
-# 実行結果
+# 実行結果 ／ Execution Result
 
 ```shell:zsh
 20221021 % make           

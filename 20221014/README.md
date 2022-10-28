@@ -1,4 +1,4 @@
-# 課題1 Binary Search
+# 課題1 二分探索 ／ Q1 Binary Search
 
 基本に授業スライドの`int binary_search(int K, int m, int n)`を使用し、引数を追加。
 
@@ -18,7 +18,7 @@ Key? 30
 Not found.
 ```
 
-# 課題2 Hash
+# 課題2 ハッシュ構造 ／ Q2 Hash
 
 実行ごとに乱数を指定した個数だけ発生させ、Hash構造に格納する形とした。
 （SEEDを変更していないため毎度同じ数が発生する）
