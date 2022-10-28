@@ -1,4 +1,4 @@
-# 課題1 Hello world
+# 課題1 "Hello world" ／ Q1 "Hello world"
 
 標準出力で `Hello world!` を出力。
 
@@ -8,7 +8,7 @@
 Hello, world!
 ```
 
-# 課題2 List 100要素
+# 課題2 100要素のリスト構造 ／ Q2 List with 100 elements
 
 `struct list *c` は要素作成（malloc）・データ入力用、`struct list *p` はデータ出力用。
 
