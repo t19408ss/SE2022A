@@ -1,6 +1,9 @@
 #include "bptree.h"
+#include <bits/stdc++.h>
 #include <vector>
 #include <sys/time.h>
+
+#define DATA_LENGTH 10000000
 
 struct timeval
 cur_time(void)
@@ -334,16 +337,64 @@ int
 main(int argc, char *argv[])
 {
 	struct timeval begin, end;
+	int i;
+	std::vector<int> a;
+	std::vector<int> d;
+	std::vector<int> r;
+	NODE *l;
 
 	init_root();
 
-	printf("-----Insert-----\n");
+	printf("---Insert----\n");
+	for (i = 1; i <= DATA_LENGTH; i++) {
+		insert(i, NULL);
+		if(i % 1000000 == 0) printf("Inserted: %d\n", i);
+		a.push_back(i);
+		d.push_back(DATA_LENGTH - i + 1);
+		r.push_back(i);
+	}
+	std::random_device seed_gen;
+	std::mt19937 engine(seed_gen());
+	std::shuffle(r.begin(), r.end(), engine);
+	printf("----Search:ASC-----\n");
+	printf("<<TIME MEASUREMENT START>>\n");
 	begin = cur_time();
-	while (true) {
-		insert(interactive(), NULL);
-		print_tree(Root);
+	for (i = 0; i < DATA_LENGTH; i++) {
+		l = find_leaf(Root, a[i]);
+		if (i % 1000000 == 0) {
+			printf("Found: a[%d] = %d\n", i, a[i]);
+			print_tree(l->parent);
+		}
 	}
 	end = cur_time();
+	printf("<<TIME MEASUREMENT STOP>>\n");
+	printf("time = %lds\n", end.tv_sec - begin.tv_sec);
+	printf("----Search:DESC----\n");
+	printf("<<TIME MEASUREMENT START>>\n");
+	begin = cur_time();
+	for (i = 0; i < DATA_LENGTH; i++) {
+		l = find_leaf(Root, d[i]);
+		if (i % 1000000 == 0) {
+			printf("Found: d[%d] = %d\n", i, d[i]);
+			print_tree(l->parent);
+		}
+	}
+	end = cur_time();
+	printf("<<TIME MEASUREMENT STOP>>\n");
+	printf("time = %lds\n", end.tv_sec - begin.tv_sec);
+	printf("----Search:RAND----\n");
+	printf("<<TIME MEASUREMENT START>>\n");
+	begin = cur_time();
+	for (i = 0; i < DATA_LENGTH; i++) {
+		l = find_leaf(Root, r[i]);
+		if (i % 1000000 == 0) {
+			printf("Found: r[%d] = %d\n", i, r[i]);
+			print_tree(l->parent);
+		}
+	}
+	end = cur_time();
+	printf("<<TIME MEASUREMENT STOP>>\n");
+	printf("time = %lds\n", end.tv_sec - begin.tv_sec);
 
 	return 0;
 }
