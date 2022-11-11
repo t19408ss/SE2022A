@@ -43,6 +43,20 @@ find_leaf(NODE *node, int key)
 	return find_leaf(node->chi[kid], key);
 }
 
+TEMP *
+copy_leaf_to_temp(TEMP *temp, NODE *leaf)
+{
+	int i;
+	temp->isLeaf = leaf->isLeaf;
+	temp->nkey = leaf->nkey;
+	for (i = 0; i < leaf->nkey; i++) {
+		temp->key[i] = leaf->key[i];
+		temp->chi[i] = leaf->chi[i];
+	}
+	temp->chi[leaf->nkey] = leaf->chi[leaf->nkey];
+	return temp;
+}
+
 NODE *
 insert_in_leaf(NODE *leaf, int key, DATA *data)
 {
@@ -71,6 +85,34 @@ insert_in_leaf(NODE *leaf, int key, DATA *data)
 	return leaf;
 }
 
+TEMP *
+insert_in_temp(TEMP *temp, int key, DATA *data)
+{
+	int i;
+	if (key < temp->key[0]) {
+		for (i = temp->nkey; i > 0; i--) {
+			temp->chi[i] = temp->chi[i-1] ;
+			temp->key[i] = temp->key[i-1] ;
+		} 
+		temp->key[0] = key;
+		temp->chi[0] = (NODE *)data;
+	}
+	else {
+		for (i = 0; i < temp->nkey; i++) {
+			if (key < temp->key[i]) break;
+		}
+		for (int j = temp->nkey; j > i; j--) {		
+			temp->chi[j] = temp->chi[j-1] ;
+			temp->key[j] = temp->key[j-1] ;
+		} 
+		temp->key[i] = key;
+		temp->chi[i] = (NODE *)data;
+	}
+	temp->nkey++;
+
+	return temp;
+}
+
 NODE *
 alloc_leaf(NODE *parent)
 {
@@ -81,6 +123,146 @@ alloc_leaf(NODE *parent)
 	node->nkey = 0;
 
 	return node;
+}
+
+NODE *
+insert_key_and_ptr(NODE *parent, int key, NODE *ptr)
+{
+	int i;
+	if (key < parent->key[0]) {
+		for (i = parent->nkey; i > 0; i--) {
+			parent->chi[i+1] = parent->chi[i] ;
+			parent->key[i] = parent->key[i-1] ;
+		} 
+		parent->key[0] = key;
+		parent->chi[1] = ptr;
+	}
+	else {
+		for (i = 0; i < parent->nkey; i++) {
+			if (key < parent->key[i]) break;
+		}
+		for (int j = parent->nkey; j > i; j--) {		
+			parent->chi[j+1] = parent->chi[j] ;
+			parent->key[j] = parent->key[j-1] ;
+		} 
+		parent->key[i] = key;
+		parent->chi[i+1] = ptr;
+	}
+	parent->nkey++;
+
+	return parent;
+}
+
+TEMP *
+insert_key_and_ptr_temp(TEMP *temp, int key, NODE *ptr)
+{
+	int i;
+	if (key < temp->key[0]) {
+		for (i = temp->nkey; i > 0; i--) {
+			temp->chi[i+1] = temp->chi[i] ;
+			temp->key[i] = temp->key[i-1] ;
+		} 
+		temp->key[0] = key;
+		temp->chi[1] = ptr;
+	}
+	else {
+		for (i = 0; i < temp->nkey; i++) {
+			if (key < temp->key[i]) break;
+		}
+		for (int j = temp->nkey; j > i; j--) {		
+			temp->chi[j+1] = temp->chi[j] ;
+			temp->key[j] = temp->key[j-1] ;
+		} 
+		temp->key[i] = key;
+		temp->chi[i+1] = ptr;
+	}
+	temp->nkey++;
+
+	return temp;
+}
+
+NODE *
+clear_leaf(NODE *leaf)
+{
+	int i;
+	for (i = 0; i < N; i++) {
+		if (i < N-1) leaf->key[i] = 0;
+		leaf->chi[i] = NULL;
+	}
+	leaf->nkey = 0;
+	return leaf;
+}
+
+TEMP *
+alloc_temp()
+{
+	TEMP *temp;
+	if (!(temp = (TEMP *)calloc(1, sizeof(TEMP)))) ERR;
+	temp->isLeaf = true;
+	temp->nkey = 0;
+
+	return temp;
+}
+
+NODE *
+insert_in_parent(NODE *n, int key, NODE *nd)
+{
+	if (n == Root) {
+		NODE *r;
+		r  = alloc_leaf(NULL);
+		r->isLeaf = false;
+		r->chi[0] = n;
+		r->key[0] = key;
+		r->chi[1] = nd;
+		r->nkey++;
+		n->parent = r;
+		nd->parent = r;
+		Root = r;
+		return r;
+	}
+	nd->parent = n->parent;
+	if (n->parent->nkey < N - 1) {
+		n->parent = insert_key_and_ptr(n->parent, key, nd);
+	} else {
+		// split parent
+		TEMP *temp;
+		NODE *parentd;
+		int i, c;
+
+		temp = alloc_temp();
+		parentd = alloc_leaf(NULL);
+		parentd->isLeaf = false;
+
+		temp = copy_leaf_to_temp(temp, n->parent);
+		temp = insert_key_and_ptr_temp(temp, key, nd);
+
+		n->parent = clear_leaf(n->parent);
+
+		// copy from temp to n->parent and parentd
+		c = std::ceil(((float)N+1)/2);
+		for (i = 0; i < c; i++) {
+			if (i < c-1) {
+				n->parent->key[i] = temp->key[i];
+				n->parent->nkey++;
+			}
+			n->parent->chi[i] = temp->chi[i];
+			//n->parent->chi[i]->parent = n->parent;
+			if (c + i < temp->nkey) {
+				parentd->key[i] = temp->key[c + i];
+				parentd->nkey++;
+			}
+			if (c + i < temp->nkey+1) {
+				parentd->chi[i] = temp->chi[c + i];
+			}
+		}
+
+		insert_in_parent(n->parent, temp->key[c-1], parentd);
+
+		for (i = 0; i < parentd->nkey+1; i++) {
+			parentd->chi[i]->parent = parentd;
+		}
+	}
+	return n->parent;
 }
 
 void 
@@ -96,24 +278,38 @@ insert(int key, DATA *data)
 		leaf = find_leaf(Root, key);
 	}
 	if (leaf->nkey < (N-1)) {
-		insert_in_leaf(leaf, key, data);
+		leaf = insert_in_leaf(leaf, key, data);
 	}
-	else { // split
-		// TEMP *temp;
-		// NODE *leafd;
-		// temp->isLeaf = leaf->isLeaf;
-		// temp->nkey = leaf->nkey;
-		// for (int i = 0; i < leaf->nkey; i++) {
-		// 	temp->key[i] = leaf->key[i];
-		// 	temp->chi[i] = leaf->chi[i];
-		// }
+	else {
+		// split
+		TEMP *temp;
+		NODE *leafd;
+		int i, c;
 
-		// insert_in_leaf(temp, key, data);
+		temp = alloc_temp();
+		leafd = alloc_leaf(NULL);
 
-		// leafd->chi[N] = lead->chi
+		temp = copy_leaf_to_temp(temp, leaf);
+		temp = insert_in_temp(temp, key, data);
 
-    // future work
+		leafd->chi[N-1] = leaf->chi[N-1];
+		leaf->chi[N-1] = leafd;
 
+		leaf = clear_leaf(leaf);
+
+		// copy from temp to leaf and leafd
+		c = std::ceil((float)N/2);
+		for (i = 0; i < c; i++) {
+			leaf->key[i] = temp->key[i];
+			leaf->nkey++;
+			leaf->chi[i] = temp->chi[i];
+
+			leafd->key[i] = temp->key[c + i];
+			leafd->nkey++;
+			leafd->chi[i] = temp->chi[c + i];
+		}
+
+		insert_in_parent(leaf, leafd->key[0], leafd);
 	}
 }
 
