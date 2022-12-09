@@ -13,7 +13,7 @@
 # 実行結果 ／ Execution Result
 
 ```shell:zsh
-(base) ho-h-oh@net75-dhcp113 20221111 % ./bptree
+20221111 % ./bptree
 ---Insert----
 Inserted: 1000000
 Inserted: 2000000
